@@ -1,0 +1,24 @@
+
+provider "aws" {  
+region="ap-south-1"
+}
+
+locals { 
+  file1=compact(split("\n",file("/root/project/abc")))
+
+}
+
+output "ov" {
+value = local.file1
+}
+
+resource "aws_iam_user" "user" {
+for_each = toset(local.file1)
+name = each.value
+}
+
+# content of file abc
+cat abc
+user_test
+user_deploy
+user_prod

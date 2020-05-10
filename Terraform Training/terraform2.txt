@@ -1,0 +1,64 @@
+provider "aws" {
+  region = "${var.region}" 
+
+
+}
+
+
+} 
+
+
+
+resource "aws_instance" "inst1" { 
+  ami = "${lookup(var.ec2_ami, var.region)}" 
+  instance_type = "t2.micro" 
+  tags = {
+     Name="ranjay_inst_remote"
+}
+}
+
+variable "region" {}
+variable "ec2_ami {
+  type="map"
+  default={
+    ap-south-1="ami-0470e33cd681b2476"    
+    ap-southeast-1="ami-0ec225b5e01ccb706"
+}
+}
+
+
+terraform {
+  backend "s3" {
+    bucket = "vickybultibucketdata"
+    key = "ranjay/terraform.tfstate"
+    region = "ap-south-1"
+}
+}
+
+provider "aws" {
+  region = "ap-south-1" 
+
+
+}
+
+
+} 
+
+
+
+resource "aws_instance" "inst1" { 
+  ami = "ami-0470e33cd681b2476" 
+  instance_type = "t2.micro" 
+  tags = {
+     Name="ranjay_inst"
+}
+}
+
+Terraform locking state -> medium.com 
+terragrunt
+
+
+https://medium.com/@jessgreb01/how-to-terraform-locking-state-in-s3-2dc9a5665cb6
+
+
+terraform apply -auto-approve

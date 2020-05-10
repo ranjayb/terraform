@@ -1,0 +1,126 @@
+109
+https://emargement.gklearn.fr/ 
+evobyc
+
+
+https://msg.gk-labs.fr
+d140952
+d140952
+
+AWS credentials….
+User : ranjay
+
+root user pwd: Azerty01
+
+terraform apply -auto-approve
+
+provider "aws" {
+  region = "ap-south-1" 
+
+
+  Access_key=
+
+ "AKIAQOXY4XFERAODLX7L"
+  Secret_key=
+
+ "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"
+
+} 
+
+
+
+resource "aws_instance" "inst1" { 
+  ami = "ami-0470e33cd681b2476" 
+  instance_type = "t2.micro" 
+  tags = {
+     Name="ranjay_inst"
+
+}
+
+terraform init
+terraform validate
+terraform plan
+terraform plan -out ranjay
+terraform apply ranjay
+terraform nmt
+terraform destroy
+terraform show
+export AWS_ACCESS_KEY_ID=AKIAQOXY4XFERAODLX7L
+export AWS_SECRET_ACCESS_KEY=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
+vim basestr.tf
+
+variable "var1" {}
+
+output "ov" {
+  value="${var.var1}"
+}
+
+terraform output
+terraform apply -var 'var1=ranjay-data'
+
+vim terraform.tfvars
+
+var1="value from terraform file"
+export TF_VAR_var1=abc12345
+terraform apply
+vim basestr.tf
+
+variable "var1_list" {
+  type="list"
+  default=["user1", "user2", "user3"]
+}
+
+output "ov" {
+  value="${var.var1_list[0]}"
+}
+
+terraform apply -var 'var1_list=["root1", "root2"]'
+
+vim basestr.tf
+
+variable "var2_map" {
+  type="map"
+  default={
+     city1="delhi"
+     city2="mumbai"
+}
+}
+
+output "total_map" {
+  value="${var.var2_map}"
+}
+
+output "city_name" {
+  value="${var.var2_map.city2}"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

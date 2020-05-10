@@ -1,0 +1,85 @@
+root@ip-172-31-39-113:~# docker pull nginx:latest
+root@ip-172-31-39-113:~# docker images
+root@ip-172-31-39-113:~# docker rmi nginx:latest ghost:latest
+
+# create docker image
+provider "docker" {}
+
+resource "docker_image" "img1" {
+  name = "nginx:latest"
+
+}
+
+
+docker inspect
+docker ps
+docker images
+docker network ls
+docker volume ls
+docker container rm -f <container_name>
+docker pull myimage:latest
+docker inpect Name | ID
+
+
+# create docker network
+resource "docker_network" "net1" {
+
+  name = "net1"
+  driver = "bridge"
+    ipam_config {
+       subnet = "192.168.1.0/24"
+
+}
+}
+
+# create docker volume
+provider "docker" {}
+
+resource "docker_volume" "vol1" {
+   name = "vol1"
+}
+
+
+
+# Kubernetes
+
+# name space - base.tf
+provider "kubernetes" {
+}
+resource "kubernetes_namespace" "example" {
+ metadata {
+ name = "kuber-123"
+ }
+}
+# pod creation
+resource "kubernetes_pod" "test" {
+ metadata {
+ name = "pod-123"
+ namespace = "${kubernetes_namespace.example.metadata.0.name}"
+ }
+ spec {
+   host_network = "true"
+   container {
+     image = "nginx:latest"
+     name = "cont1"
+ }
+ }
+}
+
+
+root@ip-172-31-39-113:~# kubesctl get ns
+root@ip-172-31-39-113:~# kubesctl get pod
+
+
+Kubernetes in action
+
+
+kubernetes replication controllers
+
+on terraform.io site search for replication controller
+
+
+
+
+
+

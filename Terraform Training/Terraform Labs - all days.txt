@@ -1,0 +1,528 @@
+login for SSH
+stagiaire
+Azerty01
+
+terraform init
+terraform validate
+terranform plan -out ranjay
+terraform apply -auto-approve
+
+# create file awsrc in root and paste
+export AWS_ACCESS_KEY_ID=AKIAQOXY4XFERAODLX7L
+export AWS_SECRET_ACCESS_KEY=irdQVYBCvFJurohD2vjzJQ+G2B2C99Ttnt+Yh9ne
+
+# access these by specifying source from your present working directory
+source = ~/awsrc
+
+provider "aws" {
+  region = "ap-south-1" 
+
+
+  Access_key=
+
+ "AKIAQOXY4XFERAODLX7L"
+  Secret_key=
+
+ "irdQVYBCvFJurohD2vjzJQ+G2B2C99Ttnt+Yh9ne"
+
+} 
+
+
+
+resource "aws_instance" "inst1" { 
+  ami = "ami-0470e33cd681b2476" 
+  instance_type = "t2.micro" 
+  tags = {
+     Name="ranjay_inst"
+
+}
+
+terraform init
+terraform validate
+terraform plan
+terraform plan -out ranjay
+terraform apply ranjay
+terraform nmt
+terraform destroy
+terraform show
+export AWS_ACCESS_KEY_ID=AKIAQOXY4XFERAODLX7L
+export AWS_SECRET_ACCESS_KEY=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
+
+# Use of variables - instead of hard coded values use variables in base.tf or main.tf
+provider "aws" {
+  region = "${var.region}" 
+
+}
+
+} 
+
+
+
+resource "aws_instance" "inst1" { 
+  ami = "${lookup(var.ec2_ami, var.region)}" 
+  instance_type = "t2.micro" 
+  tags = {
+     Name="ranjay_inst_remote"
+}
+}
+
+variable "region" {}
+variable "ec2_ami {
+  type="map"
+  default={
+    ap-south-1="ami-0470e33cd681b2476"    
+    ap-southeast-1="ami-0ec225b5e01ccb706"
+}
+}
+
+
+# Saving state file in AWS bucket in place of local directory
+
+terraform {
+  backend "s3" {
+    bucket = "vickybultibucketdata"
+    key = "ranjay/terraform.tfstate"
+    region = "ap-south-1"
+}
+}
+
+provider "aws" {
+  region = "ap-south-1" 
+
+}
+} 
+
+
+
+resource "aws_instance" "inst1" { 
+  ami = "ami-0470e33cd681b2476" 
+  instance_type = "t2.micro" 
+  tags = {
+     Name="ranjay_inst"
+}
+}
+
+#Terraform locking state -> medium.com 
+#terragrunt
+
+https://medium.com/@jessgreb01/how-to-terraform-locking-state-in-s3-2dc9a5665cb6
+
+# To avoid entry of approval yes while configuration is applied
+terraform apply -auto-approve
+
+# Working with separate variables file
+vim basestr.tf
+
+variable "var1" {}
+output "ov" {
+  value="${var.var1}"
+}
+
+terraform output
+terraform apply -var 'var1=ranjay-data'
+
+vim terraform.tfvars
+
+var1="value from terraform file"
+export TF_VAR_var1=abc12345
+terraform apply
+vim basestr.tf
+
+variable "var1_list" {
+  type="list"
+  default=["user1", "user2", "user3"]
+}
+
+output "ov" {
+  value="${var.var1_list[0]}"
+}
+
+terraform apply -var 'var1_list=["root1", "root2"]'
+
+vim basestr.tf
+
+variable "var2_map" {
+  type="map"
+  default={
+     city1="delhi"
+     city2="mumbai"
+}
+}
+
+output "total_map" {
+  value="${var.var2_map}"
+}
+
+output "city_name" {
+  value="${var.var2_map.city2}"
+}
+
+
+# using local file
+provider "aws" {  
+region="ap-south-1"
+}
+
+locals { 
+  file1=compact(split("\n",file("/root/project/abc")))
+}
+output "ov" {
+value = local.file1
+}
+
+resource "aws_iam_user" "user" {
+for_each = toset(local.file1)
+name = each.value
+}
+
+# content of file abc
+cat abc
+user_test
+user_deploy
+user_prod
+
+#Modules
+
+#ec2 instances.tf
+resource "aws_instance" "web" {
+  
+  count         = "${var.ec2_count}"
+  
+  ami           = "${var.ami_id}"
+  
+  instance_type = "${var.instance_type}"
+  
+  subnet_id     = "${var.subnet_id}"
+
+  
+  tags {
+    
+    Name = "HelloWorld"
+  
+}
+
+}
+
+
+
+#ec2 vars.tf
+
+variable "ec2_count" {
+ 
+default = "1"
+
+}
+
+
+variable "ami_id" {}
+
+
+variable "instance_type" {
+  
+default = "t2.micro"
+}
+
+
+variable "subnet_id" {}
+
+
+#vpc networking.tf
+
+resource "aws_vpc" "main" {
+  
+cidr_block       = "${var.vpc_cidr}"
+  
+instance_tenancy = "${var.tenancy}"
+
+  
+tags {
+    
+Name = "main"
+  
+}
+
+}
+
+
+
+resource "aws_subnet" "main" {
+  
+  vpc_id     = "${var.vpc_id}"
+  
+  cidr_block = "${var.subnet_cidr}"
+
+  
+  tags {
+    
+    Name = "Main"
+  
+}
+
+}
+
+
+
+
+output "vpc_id" {
+  
+value = "${aws_vpc.main.id}"
+
+}
+
+
+
+output "subnet_id" {
+  
+value = "${aws_subnet.main.id}"
+
+}
+
+
+#vpc vars.tf for declaring all variables
+
+variable "vpc_cidr" {
+  
+default = "10.0.0.0/16"
+
+}
+
+
+
+variable "tenancy" {
+  
+default = "dedicated"
+
+}
+
+
+
+variable "vpc_id" {}
+
+
+
+variable "subnet_cidr" {
+  
+default = "10.0.1.0/24"
+
+}
+
+
+
+# Main - dev - main.tf
+provider "aws" {
+  
+  region = "ap-south-1"
+
+}
+
+
+
+module "my_vpc" {
+  
+  source      = "../modules/vpc"
+  
+  vpc_cidr    = "192.168.0.0/16"
+  
+  tenancy     = "default"
+  
+  vpc_id      = "${module.my_vpc.vpc_id}"
+  
+  subnet_cidr = "192.168.1.0/24"
+
+}
+
+
+
+module "my_ec2" {
+  
+  source        = "../modules/ec2"
+  
+  ec2_count     = 1
+  
+  ami_id        = "ami-0470e33cd681b2476"
+  
+  instance_type = "t2.micro"
+  
+  subnet_id     = "${module.my_vpc.subnet_id}"
+
+}
+
+
+
+#ec2 instances.tf
+resource "aws_instance" "web" {
+  
+  count         = "${var.ec2_count}"
+  
+  ami           = "${var.ami_id}"
+  
+  instance_type = "${var.instance_type}"
+  
+  subnet_id     = "${var.subnet_id}"
+
+  
+  tags {
+    
+    Name = "HelloWorld"
+  
+}
+
+}
+
+
+
+#ec2 vars.tf
+
+variable "ec2_count" {
+ 
+default = "1"
+
+}
+
+
+variable "ami_id" {}
+
+
+variable "instance_type" {
+  
+default = "t2.micro"
+}
+
+
+variable "subnet_id" {}
+
+
+
+#vpc networking.tf
+
+resource "aws_vpc" "main" {
+  
+cidr_block       = "${var.vpc_cidr}"
+  
+instance_tenancy = "${var.tenancy}"
+
+  
+tags {
+    
+Name = "main"
+  
+}
+
+}
+
+
+
+resource "aws_subnet" "main" {
+  
+  vpc_id     = "${var.vpc_id}"
+  
+  cidr_block = "${var.subnet_cidr}"
+
+  
+  tags {
+    
+    Name = "Main"
+  
+}
+
+}
+
+
+
+
+output "vpc_id" {
+  
+value = "${aws_vpc.main.id}"
+
+}
+
+
+
+output "subnet_id" {
+  
+value = "${aws_subnet.main.id}"
+
+}
+
+
+#vpc vars.tf
+
+variable "vpc_cidr" {
+  
+default = "10.0.0.0/16"
+
+}
+
+
+
+variable "tenancy" {
+  
+default = "dedicated"
+
+}
+
+
+
+variable "vpc_id" {}
+
+
+
+variable "subnet_cidr" {
+  
+default = "10.0.1.0/24"
+
+}
+
+
+
+# Main - dev - main.tf
+provider "aws" {
+  
+  region = "ap-south-1"
+
+}
+
+
+
+module "my_vpc" {
+  
+  source      = "../modules/vpc"
+  
+  vpc_cidr    = "192.168.0.0/16"
+  
+  tenancy     = "default"
+  
+  vpc_id      = "${module.my_vpc.vpc_id}"
+  
+  subnet_cidr = "192.168.1.0/24"
+
+}
+
+
+
+module "my_ec2" {
+  
+  source        = "../modules/ec2"
+  
+  ec2_count     = 1
+  
+  ami_id        = "ami-0470e33cd681b2476"
+  
+  instance_type = "t2.micro"
+  
+  subnet_id     = "${module.my_vpc.subnet_id}"
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

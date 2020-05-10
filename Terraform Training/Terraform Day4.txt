@@ -1,0 +1,39 @@
+Assumed role, cross account in AWS
+One account assuming authority roles over another account
+
+https://github.com/vsaini44/terraform-class
+
+AWS link on tutorial for assumed role
+https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html
+
+https://stackoverflow.com/questions/43760537/ec2-instance-with-a-cross-account-iam-role
+
+
+terragrunt Blog
+
+https://blog.gruntwork.io/terragrunt-how-to-keep-your-terraform-code-dry-and-maintainable-f61ae06959d8
+
+##################
+
+remote_state {  
+backend = "s3"   
+config = {    
+
+bucket = "terrabuckdata12"    
+key = "vickybulti/terraform.tfstate"    
+region = "ap-south-1"    
+dynamodb_table = "my-lock-table"   
+}
+}
+
+# main.tf
+provider "aws" {
+  region = "ap-south-1"
+}
+
+terraform {
+  backend "s3" {}
+
+}
+
+
