@@ -1,0 +1,572 @@
+# Setting up terraform in your linux machine
+
+$ --> mkdir tmp
+$ --> cd /tmp
+/tmp$ --> wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
+
+/tmp$ --> unzip terraform_0.12.24_linux_amd64.zip
+/tmp$ --> sudo mv terraform /usr/local/bin/
+/tmp$ --> sudo chown -R root:root /usr/local/bin/terraform
+/tmp$ --> cd
+~$ --> terraform version
+Terraform v0.12.24
+
+~$ --> terraform help
+~$ --> mkdir my-project
+~$ --> cd my-project
+~/my-project$ -->
+~/my-project$ --> mkdir base
+~/my-project$ --> cd base
+~/my-project/base$ -->
+
+# Let’s create an initial configuration file inside the ~/my-project/base directory. We’ll call it base.tf.
+~/my-project/base$ --> pwd
+/home/vs/my-project/base
+
+~/my-project/base$ --> vim base.tf
+# create your first terraform configuration file
+
+~/my-project/base$ --> cat base.tf
+
+/* this is the first terraform file for deploying
+the ec2 instance using iam user credentials for AWS provider
+Also this is how the multi line comment can be mentioned in the
+tf file */
+
+provider "aws" {
+  access_key = "your_access_key"
+  secret_key = "your_secret_key"
+  region = "ap-south-1"
+}
+resource "aws_instance" "test-instance" {
+  ami = "ami-0470e33cd681b2476"
+  instance_type = "t2.micro"
+}
+
+
+/* You can see we’ve specified two configuration objects in the file: a provider and
+a resource. */
+
+# Instead of hard-coding the AWS credentials you can also use environment variable like
+~/my-project/base$ --> export AWS_ACCESS_KEY_ID=(your access key id)
+~/my-project/base$ --> export AWS_SECRET_ACCESS_KEY=(your secret access key)
+
+
+/* for example....
+export AWS_ACCESS_KEY_ID=AKIAQOXY4XFERAODLX7L
+export AWS_SECRET_ACCESS_KEY=irdQVYBCvFJurohD2vjzJQ+G2B2C99Ttnt+Yh9ne
+*/
+
+# for GCP provider 
+
+~/my-project/base$ --> cd
+~$ --> mkdir my-gcp-project
+~$ --> cd my-gcp-project
+~/my-gcp-project$ -->
+~/my-gcp-project$ --> mkdir base
+~/my-gcp-project$ --> cd base
+~/my-gcp-project/base$ -->
+
+# now create CREDENTIALS_FILE.json; copy paste json from GCP service account key
+~/my-gcp-project/base$ --> vim CREDENTIALS_FILE.json
+
+# create your first terraform configuration file
+~/my-gcp-project/base$ --> vim base.tf
+provider "google" {
+  credentials = file("CREDENTIALS_FILE.json")
+  project = "eternal-photon-275009"
+  region  = "us-central1"
+  zone = "us-central1-a"
+}
+
+resource "google_compute_instance" "vm_instance" {
+  name         = "terraform-instance"
+  machine_type = "f1-micro"
+
+  boot_disk {
+    initialize_params {
+      image = "debian-cloud/debian-9"
+    }
+  }
+
+  network_interface {
+    # A default network is created for all GCP projects
+    network       = "default"
+    access_config {
+    }
+  }
+}
+
+# Next Day wise Terraform Training content
+
+# Day 1
+
+# Vishal Saini's gitlab
+https://github.com/vsaini44/terraform-class
+
+# Basic Terraform CLI commands
+~/my-gcp-project/base$ --> terraform init
+/* The terraform init command is used to initialize a working directory containing
+Terraform configuration files. This is the first command that should be run after
+writing a new Terraform configuration or cloning an existing one from version
+control. It is safe to run this command multiple times.
+*/
+
+~/my-gcp-project/base$ --> terraform validate
+~/my-project/base$ --> terraform plan
+/*
+The terraform plan command is used to create an execution plan. Terraform
+performs a refresh, unless explicitly disabled, and then determines what actions are
+necessary to achieve the desired state specified in the configuration files.
+This command is a convenient way to check whether the execution plan for a set of
+changes matches your expectations without making any changes to real resources or
+to the state. For example, terraform plan might be run before committing a change to
+version control, to create confidence that it will behave as expected.
+*/
+
+~/my-gcp-project/base$ --> terraform plan -out ranjay
+~/my-gcp-project/base$ --> terraform apply ranjay
+
+# to format your config file
+~/my-gcp-project/base$ --> terraform fmt
+
+# to destroy the resources created by you 
+~/my-gcp-project/base$ --> terraform destroy
+
+# to see the resources created by you
+~/my-gcp-project/base$ --> terraform show
+
+~/my-project/base$ --> terraform graph
+
+/* 
+
+Working with variables for parameterizing our configuration instead of hardcoding - 4 options: 
+
+1. Loading variables from command line flags.
+2. Loading variables from a file.
+3. Loading variables from environment variables.
+4. Variable defaults.
+
+*/
+
+# option 1 - inside your config file - example below
+
+~/my-gcp-project/base$ --> vim basestr.tf
+
+variable "var1" {}
+output "ov" {
+  value="${var.var1}"
+}
+
+terraform output
+terraform apply -var 'var1=ranjay-data'
+
+/* option 2 - create a separate variables file - example below. We start by creating a file, called variables.tf, to hold our variables.
+*/
+
+~$ --> cd ~/my-project/base/
+~/my-project/base$ --> vim variables.tf
+
+/* Let’s create a few variables in this file now. Variables can come in a number of types:
+• Strings — String syntax. Can also be Boolean’s: true or false.
+• Maps — An associative array or hash-style syntax.
+• Lists — An array syntax.
+*/
+
+~/my-gcp-project/base$ --> vim terraform.tfvars
+
+var1="value from terraform file"
+export TF_VAR_var1=abc12345
+terraform apply
+vim basestr.tf
+
+variable "var1_list" {
+  type="list"
+  default=["user1", "user2", "user3"]
+}
+output "ov" {
+  value="${var.var1_list[0]}"
+}
+
+
+# option 3 - directly as an argument in 'terraform apply' - example below
+
+/* We can also populate maps via the -var command line flag: */
+
+~/my-project/base$ --> terraform plan -var 'ami={ us-east-1 = "ami-0d729a60", us-west- 1 = "ami-7c4b331c" }'
+
+/* And lists via the command line: */
+~/my-project/base$ --> terraform plan -var 'security_group_ids=["sg-4f713c35", "sg-4 f713c35", "sg-4f713c35"]'
+
+~/my-gcp-project/base$ --> terraform apply -var 'var1_list=["root1", "root2"]'
+
+
+
+# variables as string, list and map; below is the example of variables as map
+
+~/my-gcp-project/base$ --> vim basestr.tf
+
+variable "var2_map" {
+  type="map"
+  default={
+     city1="delhi"
+     city2="mumbai"
+}
+}
+output "total_map" {
+  value="${var.var2_map}"
+}
+output "city_name" {
+  value="${var.var2_map.city2}"
+}
+
+# option 4 : Loading variables from environment variables
+
+/* Terraform will also parse any environment variables that are prefixed with TF_VAR.
+For example, if Terraform finds an environment variable named: */
+
+TF_VAR_access_code=abc123
+
+/* it will use the value of the environment variable as the string value of the access_code variable.
+We can populate a map via an environment variable: */
+
+TF_VAR_ami='{us-east-1 = "ami-0d729a60", us-west-1 = "ami-7c4b331c"}'
+
+# and a list.
+TF_VAR_roles='["sg-4f713c35", "sg-4f713c35", "sg-4f713c35"]'
+
+# Some special terraform functions
+
+
+~/my-gcp-project/base$ --> vim basestr.tf 
+
+provider "aws" {
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
+  region = "${var.region}"
+}
+resource "aws_instance" "base" {
+  ami = "${lookup(var.ami, var.region)}"
+  instance_type = "t2.micro"
+}
+resource "aws_eip" "base" {
+  instance = "${aws_instance.base.id}"
+  vpc = true
+}
+
+# Day 2 - Terraform States
+$ What is Terraform state
+$ Shared storage for state files
+$ Locking state files
+$ Isolating state files
+$ File layout
+$ Read-only state
+
+/* 
+Secrets - All data in Terraform state files is stored in plaintext. This is a problem because certain Terraform resources need to store sensitive data. For example, if you use the aws_db_instance resource to create a database, Terraform will store the user name and password for the database in a state file with no encryption whatso ever. Storing plaintext secrets anywhere is a bad idea, including version control. 
+
+Instead of using version control, the best way to manage shared storage for state files is to use Terraform’s built-in support for Remote State Storage. Using the terraform remote config command, you can configure Terraform to fetch and store state data from a remote store every time it runs. Several remote stores are supported, such as Amazon S3, Azure Storage, HashiCorp Consul, and HashiCorp Atlas.
+
+*/
+
+# Saving state file in AWS S3 bucket
+
+provider "aws" {
+region = "us-east-1"
+}
+
+resource "aws_s3_bucket" "terraform_state" { 
+  bucket = "terraform-up-and-running-state"
+  versioning {
+     enabled = true
+}
+lifecycle {
+prevent_destroy = true
+}
+}
+
+/* With remote state enabled, Terraform will automatically pull the latest state from this S3 bucket before running a command and automatically push the latest state to the S3 bucket after running a command. To see this in action, add the following output variable:
+*/
+
+output "s3_bucket_arn" {
+value = "${aws_s3_bucket.terraform_state.arn}"
+}
+
+/* 
+
+Locking state files - Enabling remote state solves the problem of how you share state files with your teammates, but it creates two new problems:
+
+1. Each developer on your team needs to remember to run the terraform remote config command for every Terraform project. It’s easy to mess up or forget to run this long command.
+2. While Terraform remote state storage ensures your state is stored in a shared location, it does not provide locking for that shared location (unless you are using HashiCorp’s paid product Atlas for remote state storage). Therefore, race conditions are still possible if two developers are using Terraform at the same time on the same state files.
+
+One way to solve both of these problems is to use an open source tool called Terragrunt. Terragrunt is a thin wrapper for Terraform that manages remote state for you automatically and provides locking by using Amazon DynamoDB. DynamoDB is also
+part of the AWS free tier, so using it for locking should be free for most teams.
+
+*/
+
+# Terragrunt Blog
+
+# https://blog.gruntwork.io/terragrunt-how-to-keep-your-terraform-code-dry-and-maintainable-f61ae06959d8
+
+##################
+
+remote_state {  
+backend = "s3"   
+config = {    
+
+bucket = "terrabuckdata12"    
+key = "vickybulti/terraform.tfstate"    
+region = "ap-south-1"    
+dynamodb_table = "my-lock-table"   
+}
+}
+
+# main.tf
+provider "aws" {
+  region = "ap-south-1"
+}
+
+terraform {
+  backend "s3" {}
+}
+}
+
+/*
+Once you check this .terragrunt file into source control, everyone on your team can use
+Terragrunt to run all the standard Terraform commands:
+
+*/
+
+$ terragrunt plan
+$ terragrunt apply
+$ terragrunt output
+$ terragrunt destroy
+
+
+# Terraform modules - similar to ansible roles
+reusable code/ terraform templates kept in a folder is a module
+
+https://www.youtube.com/watch?v=dMzY3GiJPiY
+
+Here in this example, same terraform module is used to setup 'VPC and ec2' in test and production (these different environments may need differnt CIDR blocks, differnet instance types, different count of instances and so on while using similar templates.
+
+#Modules
+
+#ec2 module - instances.tf
+resource "aws_instance" "web" {
+  
+  count         = "${var.ec2_count}"
+  
+  ami           = "${var.ami_id}"
+  
+  instance_type = "${var.instance_type}"
+  
+  subnet_id     = "${var.subnet_id}"
+
+  
+  tags {
+    
+    Name = "HelloWorld"
+  
+}
+
+}
+
+
+#ec2 module - variables in file vars.tf
+
+variable "ec2_count" {
+ 
+default = "1"
+
+}
+
+
+variable "ami_id" {}
+
+
+variable "instance_type" {
+  
+  default = "t2.micro"
+}
+
+
+variable "subnet_id" {}
+
+
+#vpc module - networking.tf
+
+resource "aws_vpc" "main" {
+  
+cidr_block       = "${var.vpc_cidr}"
+  
+instance_tenancy = "${var.tenancy}"
+
+  
+tags {
+    
+Name = "main"
+  
+}
+
+}
+
+
+
+resource "aws_subnet" "main" {
+  
+  vpc_id     = "${var.vpc_id}"
+  
+  cidr_block = "${var.subnet_cidr}"
+
+  
+  tags {
+    
+    Name = "Main"
+  
+}
+
+}
+
+
+
+output "vpc_id" {
+  
+value = "${aws_vpc.main.id}"
+
+}
+
+
+
+output "subnet_id" {
+  
+value = "${aws_subnet.main.id}"
+
+}
+
+
+#vpc variables -  vars.tf
+
+variable "vpc_cidr" {
+  
+default = "10.0.0.0/16"
+
+}
+
+
+
+variable "tenancy" {
+  
+default = "dedicated"
+
+}
+
+
+
+variable "vpc_id" {}
+
+
+
+variable "subnet_cidr" {
+  
+default = "10.0.1.0/24"
+
+}
+
+
+
+# Main - dev - main.tf
+provider "aws" {
+  
+  region = "ap-south-1"
+
+}
+
+
+module "my_vpc" {
+  
+  source      = "../modules/vpc"
+  
+  vpc_cidr    = "192.168.0.0/16"
+  
+  tenancy     = "default"
+  
+  vpc_id      = "${module.my_vpc.vpc_id}"
+  
+  subnet_cidr = "192.168.1.0/24"
+
+}
+
+
+
+module "my_ec2" {
+  
+  source        = "../modules/ec2"
+  
+  ec2_count     = 1
+  
+  ami_id        = "ami-0470e33cd681b2476"
+  
+  instance_type = "t2.micro"
+  
+  subnet_id     = "${module.my_vpc.subnet_id}"
+
+}
+
+
+
+# Main - prod - main.tf
+provider "aws" {
+  
+  region = "ap-south-1"
+
+}
+
+
+
+module "my_vpc" {
+  
+  source      = "../modules/vpc"
+  
+  vpc_cidr    = "192.168.0.0/16"
+  
+  tenancy     = "default"
+  
+  vpc_id      = "${module.my_vpc.vpc_id}"
+  
+  subnet_cidr = "192.168.1.0/24"
+
+
+}
+
+
+
+module "my_ec2" {
+  
+  source        = "../modules/ec2"
+  
+  ec2_count     = 1
+  
+  ami_id        = "ami-5a8da735"
+  
+  instance_type = "t2.micro"
+  
+  subnet_id     = "${module.my_vpc.subnet_id}"
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
